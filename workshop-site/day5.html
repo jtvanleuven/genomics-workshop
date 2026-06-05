@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 5 – Genomics Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
+  <p>Day 5 &nbsp;·&nbsp; Tuesday, March 10, 2026</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="day1.html">Day 1</a>
+  <a href="day2.html">Day 2</a>
+  <a href="day3.html">Day 3</a>
+  <a href="day4.html">Day 4</a>
+  <a href="day5.html" class="active">Day 5</a>
+  <a href="day6.html">Day 6</a>
+</nav>
+
+<main>
+
+  <div class="day-nav">
+    <a href="day4.html">← Day 4</a>
+    <a href="day6.html">Day 6 →</a>
+  </div>
+
+  <div class="section">
+    <h2>📌 Today's Topics</h2>
+    <ul>
+      <li>Introduction to R and RStudio (data types, structures, functions)</li>
+      <li>Setting up an R project and copying data from the HPC</li>
+      <li>Reading VCF files with <code>vcfR</code></li>
+      <li>Combining data across samples into a single data frame</li>
+      <li>Introduction to <code>dplyr</code> pipes and data wrangling</li>
+    </ul>
+    <div class="banner info">
+      <span class="icon">💡</span>
+      <span>From here on, use AI to write your R code. Prompt it, run the output, and iterate. You don't need to memorize syntax — you need to understand what the code does.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🗂️ Set Up Your R Project</h2>
+    <p>In RStudio: <strong>File → New Project → New Directory → New Project</strong>. Name it something like <code>genomics_analysis</code> in your home directory.</p>
+    <p>Then create subdirectories:</p>
+<pre><code># Run in the RStudio Terminal (not the R console)
+mkdir data data/vcfs data/flagstats results plots</code></pre>
+
+    <p>Copy your VCF files and QC data from the HPC to your local machine using <code>scp</code> (run this in a local terminal):</p>
+<pre><code># Copy filtered VCF files
+scp jvanleuven@ford.ibest.uidaho.edu:~/dc_workshop/05_genomic_variants/filtered/*.vcf data/vcfs/
+
+# Copy QC data
+scp -r jvanleuven@ford.ibest.uidaho.edu:~/dc_workshop/01_qc data/
+
+# Copy alignment stats
+scp jvanleuven@ford.ibest.uidaho.edu:~/dc_workshop/04_alignments/bam/*.txt data/flagstats/</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>📦 Load Required Packages</h2>
+<pre><code># Install if needed (only once)
+install.packages("tidyverse")
+install.packages("vcfR")
+install.packages("ape")
+
+# Load for this session
+library(tidyverse)
+library(vcfR)
+library(ape)</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🔬 Reading a VCF File</h2>
+    <p>First, read a single VCF file to understand its structure:</p>
+<pre><code># Basic read — treats it like a table
+vcf <- read.table("data/vcfs/SRR2584853_final_variants.vcf")
+head(vcf)
+dim(vcf)
+str(vcf)
+
+# Better: use vcfR for structured access
+vcf <- read.vcfR("data/vcfs/SRR2584853_final_variants.vcf")
+vcf_clean <- vcfR2tidy(vcf)
+vcf_data <- vcf_clean$fix    # the variant table
+rm(vcf, vcf_clean)           # keep the environment clean</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🔄 Combining All Samples with a Loop</h2>
+    <p>We need to read all 6 VCF files and combine them into one data frame. This is a perfect case for AI — the loop structure is specific and error-prone to write by hand:</p>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Write R code that reads all VCF files in the directory "data/vcfs/" using the vcfR package, extracts the variant table from each, adds a column called "ID" with the sample name (extracted from the filename, everything before the first underscore), and combines all samples into a single data frame called combined_vcfs. Use a for loop. Remove intermediate objects to keep the environment clean. Show how to verify all 6 samples are represented using table().</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>What the loop looks like</h3>
+<pre><code>files <- list.files("data/vcfs")
+
+# Create empty data frame with the right columns
+ncol(vcf_data)  # check how many columns first
+combined_vcfs <- data.frame(matrix(ncol = 25))
+names(combined_vcfs) <- names(vcf_data)
+
+for (i in 1:length(files)) {
+  file <- files[i]
+  vcf <- read.vcfR(paste("data/vcfs/", file, sep = ""))
+  vcf_clean <- vcfR2tidy(vcf)
+  vcf_data <- vcf_clean$fix
+  vcf_data$ID <- str_split(file, "_", simplify = T)[1]  # sample name
+  rm(vcf, vcf_clean, file)
+  combined_vcfs <- rbind(combined_vcfs, vcf_data)
+}
+
+# Remove the empty first row
+combined_vcfs <- combined_vcfs %>%
+  filter(!is.na(CHROM))
+
+table(combined_vcfs$ID)   # verify all 6 samples present</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🔧 Wrangling the Variant Data</h2>
+    <p>Select the columns we care about and calculate basic summaries:</p>
+<pre><code>names(combined_vcfs)    # see all available columns
+
+variants <- combined_vcfs %>%
+  select(ID, POS, REF, ALT, QUAL, INDEL, DP, MQ)
+
+dim(variants)
+mean(variants$DP)    # average read depth across all variants
+
+# Count variants per sample
+cnt_tab <- variants %>%
+  group_by(ID) %>%
+  summarize(tot_muts = n()) %>%
+  arrange(desc(tot_muts))
+
+cnt_tab</code></pre>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have an R data frame called "variants" with columns: ID (sample name), POS (genomic position), REF (reference allele), ALT (alternate allele), QUAL (quality score), INDEL (TRUE/FALSE), DP (read depth), MQ (mapping quality). Write tidyverse/dplyr code to: (1) count how many variants each sample has, sorted descending; (2) calculate the mean and median read depth (DP) per sample; (3) separate SNPs from indels and count each type per sample. Show the output with print() or knitr::kable().</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🤖 More AI Prompts — Day 5</h2>
+
+    <h3>Understand R data types</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I'm learning R for bioinformatics. Explain the difference between these R data structures with a brief example of each: vector, list, matrix, data frame, and factor. Which one would I use to store a table of genomic variants (rows = variants, columns = position, allele, quality, etc.)?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Understand the pipe operator</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>In R's tidyverse, what does the pipe operator %>% do? Rewrite this code without using pipes so I can see what each step does:
+
+variants %>%
+  group_by(ID) %>%
+  summarize(tot_muts = n()) %>%
+  arrange(desc(tot_muts))
+
+Also explain group_by(), summarize(), and n() individually.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Explain vcfR2tidy output</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I used vcfR2tidy() from the vcfR package in R to parse a VCF file. The result is a list with elements called $fix, $gt, and $meta. What does each element contain, and which one should I use to get a table of SNP positions, reference alleles, alternate alleles, and quality scores?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Debug an R error</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I'm running R code to analyze VCF files from a genomics workshop and I got this error: [paste error message]. Here is the code that caused it: [paste your code]. What does this error mean and how do I fix it?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📝 End of Day 5 Wrap-Up</h2>
+    <ul>
+      <li>You have a combined data frame (<code>variants</code>) with all 6 samples' SNP data</li>
+      <li>You can count variants per sample and calculate summary statistics</li>
+      <li>Tomorrow: visualize these variants with ggplot2</li>
+    </ul>
+  </div>
+
+</main>
+
+<footer>
+  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

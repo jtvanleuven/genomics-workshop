@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 6 – Genomics Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
+  <p>Day 6 &nbsp;·&nbsp; Thursday, March 12, 2026</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="day1.html">Day 1</a>
+  <a href="day2.html">Day 2</a>
+  <a href="day3.html">Day 3</a>
+  <a href="day4.html">Day 4</a>
+  <a href="day5.html">Day 5</a>
+  <a href="day6.html" class="active">Day 6</a>
+</nav>
+
+<main>
+
+  <div class="day-nav">
+    <a href="day5.html">← Day 5</a>
+    <a href="index.html">Home</a>
+  </div>
+
+  <div class="section">
+    <h2>📌 Today's Topics</h2>
+    <ul>
+      <li>Coverage plots with ggplot2</li>
+      <li>Merging variant data with sample metadata</li>
+      <li>Mutations over evolutionary time (LTEE)</li>
+      <li>Annotating variants with gene information from a GFF file</li>
+      <li>Tile plots, heatmaps, and UpSet plots</li>
+      <li>Saving publication-quality figures</li>
+    </ul>
+    <div class="banner info">
+      <span class="icon">💡</span>
+      <span>Continuing from the same R project and the <code>variants</code> and <code>cnt_tab</code> data frames built on Day 5.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Coverage Plot</h2>
+    <p>Visualize read depth across the genome for each sample:</p>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have an R data frame called "variants" with columns ID (sample name), POS (genomic position in bp), and DP (read depth at that position). Write ggplot2 code to make a scatter plot of DP (y-axis) vs POS (x-axis) with one panel per sample using facet_wrap(~ID, nrow=6). Use theme_bw() and add informative axis labels. Save the plot as both a PNG (5.5 x 5 inches, 300 dpi) and a PDF (5.5 x 5 inches) in a folder called "plots/".</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+<pre><code># Coverage plot
+p_cov <- ggplot(variants, aes(x = POS, y = DP)) +
+  geom_point() +
+  facet_wrap(~ID, nrow = 6) +
+  labs(x = "Genomic Position (bp)", y = "Read Depth") +
+  theme_bw()
+p_cov
+
+ggsave(p_cov, file = "plots/snp_cov.png", width = 5.5, height = 5, units = "in", dpi = 300)
+ggsave(p_cov, file = "plots/snp_cov.pdf", width = 5.5, height = 5, units = "in")</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🔬 Merging with Metadata</h2>
+    <p>The LTEE metadata tells us how many generations each strain was evolved. Merging it with our variant counts lets us ask: do strains with more generations have more mutations?</p>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have two R data frames. The first, "cnt_tab", has columns "ID" (E. coli sample name like SRR2584853) and "tot_muts" (total number of SNP variants). The second is metadata I'll download from this URL: https://raw.githubusercontent.com/datacarpentry/wrangling-genomics/gh-pages/files/Ecoli_metadata_composite.csv — it has a column "run" with the sample name and a column "generation" with the number of generations evolved.
+
+Write R code to:
+1. Download and read the metadata CSV
+2. Merge it with cnt_tab by matching ID to run
+3. Make a line plot (ggplot2) of mutations over evolutionary time: generation on x-axis, tot_muts on y-axis, with points and a line connecting them
+4. Add informative axis labels and a title</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+<pre><code># Download and read metadata
+url <- "https://raw.githubusercontent.com/datacarpentry/wrangling-genomics/gh-pages/files/Ecoli_metadata_composite.csv"
+download.file(url = url, destfile = "data/Ecoli_metadata_composite.csv")
+meta <- read.csv("data/Ecoli_metadata_composite.csv")
+
+# Merge with mutation counts
+cnt_tab_meta <- merge(cnt_tab, meta, by.x = "ID", by.y = "run")
+View(cnt_tab_meta)
+
+# Plot: mutations over evolutionary time
+ggplot(cnt_tab_meta, aes(x = generation, y = tot_muts)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Generations Evolved", y = "Number of Mutations",
+       title = "Mutation Accumulation in E. coli LTEE Strains") +
+  theme_bw()</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🧬 Annotating Variants with Gene Information</h2>
+    <p>Download the GFF annotation file and label each variant with the gene it falls in:</p>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have an R data frame called "variants" with genomic variant positions (column POS) from E. coli. I also have a GFF annotation file I can read with ape::read.gff(). Write R code to:
+1. Download the GFF from: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/017/985/GCA_000017985.1_ASM1798v1/GCA_000017985.1_ASM1798v1_genomic.gff.gz and save it to "data/Rel606.gff.gz"
+2. Read it and filter to only CDS features
+3. Extract the gene name and product name from the attributes column using str_extract() and str_remove()
+4. For each row in variants, find which CDS the position falls within (between start and end), and add gene and product columns to variants. If the position is between genes, label it "intergenic".
+Use a for loop with an if/else to handle the intergenic case.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+<pre><code># Download and read GFF annotation
+url <- "ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/017/985/GCA_000017985.1_ASM1798v1/GCA_000017985.1_ASM1798v1_genomic.gff.gz"
+download.file(url = url, destfile = "data/Rel606.gff.gz")
+gff <- read.gff("data/Rel606.gff.gz")
+
+# Extract CDS features
+cds <- gff %>% filter(type == "CDS")
+
+# Parse gene name and product from the attributes column
+cds$gene    <- str_remove(str_split(str_extract(cds$attributes, "gene=.*?;"), "=", simplify = T)[,2], ";")
+cds$product <- str_remove(str_split(str_extract(cds$attributes, "product=.*?;"), "=", simplify = T)[,2], ";")
+
+# Annotate each variant with gene info
+variants$gene    <- NA
+variants$product <- NA
+
+for (i in 1:nrow(variants)) {
+  match <- cds %>%
+    filter(start < variants$POS[i], end > variants$POS[i]) %>%
+    select(gene, product)
+  if (nrow(match) > 0) {
+    variants[i, c('gene','product')] <- match
+  } else {
+    variants[i, c('gene','product')] <- c('', 'intergenic')
+  }
+}</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🗺️ Tile Plot — Mutations Across Samples &amp; Genes</h2>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have an R data frame called "variants" with columns: ID (sample name), POS (position), gene (gene name), and product (gene product). Write ggplot2 code to make a tile plot where:
+- x-axis = gene name
+- y-axis = sample ID
+- Each tile represents a mutation in that gene in that sample
+Use geom_tile(), remove x-axis tick labels (since there are too many genes to label), use theme_bw(), and add a descriptive title. Save the result as a PNG and PDF to plots/.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+<pre><code>tile_plot <- ggplot(variants, aes(x = gene, y = ID)) +
+  geom_tile() +
+  theme_bw() +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(title = "Mutations per Gene per Sample", x = "Gene", y = "Sample")
+tile_plot
+
+ggsave(tile_plot, file = "plots/tile.png", width = 6, height = 3, units = "in")
+ggsave(tile_plot, file = "plots/tile.pdf", width = 6, height = 3, units = "in")
+
+# Which genes have mutations in the citrate-utilizing samples?
+variants %>% filter(str_detect(gene, "cit"))</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🔥 Heatmap with pheatmap</h2>
+    <p>Create a gene expression-style heatmap using simulated expression data based on real LTEE gene names:</p>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have a vector of real E. coli gene names from the Rel606 genome stored in a data frame called "cds" (column: gene). Write R code using the pheatmap package to:
+1. Randomly sample 500 gene names from cds (filter out genes with no name first)
+2. Create a simulated expression matrix (500 genes x 6 samples) with random normal data (mean=8, sd=3)
+3. Add a biological signal: add 6 to the expression values of the first 20 genes in samples 1-3 (these represent "citrate-utilizing" strains)
+4. Add column annotations marking samples 1-3 as "citrate" and 4-6 as "nocitrate"
+5. Generate a pheatmap with: row scaling, correlation-based clustering, a blue-white-red color scheme, and a title
+
+The 6 sample names are: SRR2584853, SRR2584863, SRR2584866, SRR2589044, SRR6178292, SRR6178302</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+<pre><code>library(pheatmap)
+
+# Sample real gene names
+set.seed(123)
+ngenes <- 500
+sample_genes <- cds %>%
+  filter(!gene == "") %>%
+  slice_sample(n = ngenes) %>%
+  select(gene, product)
+
+# Simulated expression matrix
+exp_data <- matrix(rnorm(600, mean = 8, sd = 3), nrow = ngenes, ncol = 6)
+colnames(exp_data) <- c("SRR2584853","SRR2584863","SRR2584866",
+                         "SRR2589044","SRR6178292","SRR6178302")
+rownames(exp_data) <- sample_genes$gene
+
+# Add biological signal for citrate strains
+exp_data[1:20, 1:3] <- exp_data[1:20, 1:3] + 6
+
+# Column annotations
+col_ann <- data.frame(Condition = rep(c("citrate","nocitrate"), each = 3))
+rownames(col_ann) <- colnames(exp_data)
+
+# Heatmap
+pheatmap(exp_data,
+         main = "Rel606 Gene Expression Analysis",
+         annotation_col = col_ann,
+         scale = "row",
+         clustering_distance_rows = "correlation",
+         color = colorRampPalette(c("#053061","#f7f7f7","#67001f"))(100),
+         fontsize_row = 7)</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>📊 UpSet Plot — Shared Mutations Across Samples</h2>
+
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I have an R data frame called "variants" with columns ID (sample name) and POS (genomic position). I want to visualize which mutations are shared between samples using an UpSet plot (from the UpSetR package). Write R code to:
+1. Create a unique mutation identifier by combining POS and ALT (e.g., "1234_A")
+2. Reshape the data into a wide binary matrix where rows are mutations and columns are samples (1=present, 0=absent)
+3. Generate an UpSet plot using upset() with nsets=6, order.by="freq", and custom colors
+
+Explain what an UpSet plot shows and why it's better than a Venn diagram for 6 samples.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>💾 Save Your Results</h2>
+<pre><code># Save final tables
+write.csv(cnt_tab_meta, "results/strain_mut_counts.csv", quote = F, row.names = F)
+write.csv(variants,     "results/filtered_vcfs.csv",    quote = F, row.names = F)</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🎓 Final AI Prompts</h2>
+
+    <h3>Customize a ggplot2 figure for publication</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Here is a ggplot2 figure I made for my genomics paper: [paste your ggplot code]. Modify it to meet typical journal requirements: (1) font size at least 12pt, (2) white background with minimal gridlines, (3) colorblind-friendly palette, (4) axis labels with units, (5) clean legend. Use theme_bw() or theme_classic() as a base.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Explain what a plot shows biologically</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I made a ggplot2 plot showing the number of mutations (y-axis) vs. the number of generations evolved (x-axis) for 6 E. coli strains from the LTEE experiment. The trend shows mutations accumulating roughly linearly over time, but one strain has far more mutations than the others. What biological explanations could account for this outlier? What follow-up analyses would you suggest?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Write a summary of what you found</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I analyzed 6 E. coli genome sequences from the LTEE (Long-Term Evolution Experiment). Here are my results: [paste your cnt_tab_meta table and the gene names with the most mutations]. Write a 2–3 paragraph scientific summary of what these results show, including: (1) overall mutation rates, (2) which genes were most frequently mutated across samples, and (3) what the citrate-utilizing strains (those that evolved the ability to grow on citrate) show compared to non-citrate strains.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎉 Workshop Complete!</h2>
+    <p>Over 6 days you've gone from raw FASTQ files to publication-quality genomic visualizations:</p>
+    <div class="step-grid">
+      <div class="step-card">
+        <span class="step-num">1</span>
+        <p>Downloaded &amp; inspected E. coli sequencing reads</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">2</span>
+        <p>Assessed quality with FastQC/MultiQC &amp; trimmed with fastp</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">3</span>
+        <p>Aligned reads to the Rel606 reference genome</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">4</span>
+        <p>Called and filtered genomic variants (SNPs)</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">5</span>
+        <p>Automated the pipeline with a bash script</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">6</span>
+        <p>Analyzed &amp; visualized variants in R with AI assistance</p>
+      </div>
+    </div>
+    <p style="margin-top:16px;"><strong>Post-workshop survey:</strong> <a href="https://urldefense.com/v3/__https://carpentries.typeform.com/to/UgVdRQ?slug=2026-02-24-genomicsworkshop-online__" target="_blank">Complete the post-workshop survey</a></p>
+  </div>
+
+</main>
+
+<footer>
+  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

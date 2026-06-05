@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Carpentries: Genomics Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
+  <p>University of Idaho IMCI &nbsp;·&nbsp; Tuesdays &amp; Thursdays 3:00–5:30 PST &nbsp;·&nbsp; IRIC Room 352</p>
+</header>
+
+<nav>
+  <a href="index.html" class="active">Home</a>
+  <a href="day1.html">Day 1</a>
+  <a href="day2.html">Day 2</a>
+  <a href="day3.html">Day 3</a>
+  <a href="day4.html">Day 4</a>
+  <a href="day5.html">Day 5</a>
+  <a href="day6.html">Day 6</a>
+</nav>
+
+<main>
+
+  <div class="section">
+    <h2>📋 Workshop Overview</h2>
+    <p>This workshop follows the <strong>Data Carpentries Genomics curriculum</strong>, teaching participants how to work with next-generation sequencing (NGS) data from the command line through to publication-ready figures in R. We use <em>E. coli</em> genome data from the Long-Term Evolution Experiment (LTEE) as our running dataset.</p>
+    <p>This iteration integrates <strong>AI as a coding collaborator</strong>. Throughout the workshop, you'll learn to prompt AI tools to write bash scripts and R code, evaluate and run the output, and iterate when things don't work — which is increasingly how real research code gets written.</p>
+    <div class="banner info">
+      <span class="icon">💡</span>
+      <span>Recommended free AI tools: <strong>Claude.ai</strong>, <strong>ChatGPT</strong>, or <strong>Google Gemini</strong>. You do not need a paid account for any of these.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📅 Schedule</h2>
+    <table>
+      <thead>
+        <tr><th>Day</th><th>Date</th><th>Topics</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="day1.html"><strong>Day 1</strong></a></td><td>Tues Feb 24</td><td>Intro, data organization, command line, downloading sequencing data</td></tr>
+        <tr><td><a href="day2.html"><strong>Day 2</strong></a></td><td>Thurs Feb 26</td><td>Inspecting FASTQ files, quality control with FastQC &amp; MultiQC, trimming reads with fastp</td></tr>
+        <tr><td><a href="day3.html"><strong>Day 3</strong></a></td><td>Tues Mar 3</td><td>Post-trim QC, variant calling workflow (BWA, SAMtools, BCFtools)</td></tr>
+        <tr><td><a href="day4.html"><strong>Day 4</strong></a></td><td>Tues Mar 5</td><td>Automating the pipeline with a bash script, visualizing in IGV</td></tr>
+        <tr><td><a href="day5.html"><strong>Day 5</strong></a></td><td>Tues Mar 10</td><td>Introduction to R &amp; RStudio, reading VCF files, data wrangling</td></tr>
+        <tr><td><a href="day6.html"><strong>Day 6</strong></a></td><td>Thurs Mar 12</td><td>Data visualization in R: ggplot2, heatmaps, upset plots, saving figures</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Important Links</h2>
+    <ul>
+      <li><a href="https://docs.carpentries.org/topic_folders/policies/code-of-conduct.html" target="_blank">Code of Conduct</a></li>
+      <li><a href="https://shubhamkrpandey19.github.io/2026-02-24-genomicsworkshop-online/" target="_blank">Course Website</a></li>
+      <li><a href="https://drive.google.com/file/d/1vncAJCMIb18wwuA7LixAneS-VNELWClT/view?usp=sharing" target="_blank">Linux Command Line Guide</a></li>
+      <li><a href="https://hpc.uidaho.edu/" target="_blank">UI HPC Documentation</a></li>
+      <li>Server: <a href="https://marvin.hpc.uidaho.edu:8000" target="_blank">marvin.hpc.uidaho.edu:8000</a> &nbsp;|&nbsp; <a href="https://zaphod.hpc.uidaho.edu:8000" target="_blank">zaphod.hpc.uidaho.edu:8000</a></li>
+      <li><a href="https://igv.org/app/" target="_blank">IGV Web App</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🧬 The Variant Calling Pipeline</h2>
+    <p>Over the first four days we build this pipeline step by step, then automate it in a single bash script:</p>
+    <div class="pipeline">
+      <span class="pipe-step">Download reads</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">FastQC / MultiQC</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">fastp (trim)</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">BWA align</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">SAMtools</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">BCFtools call</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">VCF filter</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">R analysis</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🤖 Using AI in This Workshop</h2>
+    <p>Each day page contains <strong>blue AI prompt boxes</strong>. These are pre-written prompts you can copy and paste directly into Claude.ai, ChatGPT, or another AI tool. The AI will write code for you — your job is to:</p>
+    <ul>
+      <li><strong>Read</strong> what the AI produced before running it</li>
+      <li><strong>Run</strong> the code and check the output</li>
+      <li><strong>Iterate</strong> — paste error messages back into the AI and ask it to fix them</li>
+      <li><strong>Understand</strong> — ask the AI to explain any part you don't follow</li>
+    </ul>
+    <div class="banner tip">
+      <span class="icon">✅</span>
+      <span>AI is a collaborator, not an oracle. It makes mistakes. Part of this workshop is learning <em>how to verify</em> what it produces.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Feedback Forms</h2>
+    <ul>
+      <li><a href="https://urldefense.com/v3/__https://carpentries.typeform.com/to/wi32rS?slug=2026-02-24-genomicsworkshop-online__" target="_blank">Pre-Workshop Survey</a></li>
+      <li><a href="https://forms.gle/zcA97s5C1Vvpw74C9" target="_blank">Day 1 Feedback</a></li>
+      <li><a href="https://forms.gle/Q3DUrBBBNbzfASfB7" target="_blank">Day 2 Feedback</a></li>
+      <li><a href="https://forms.gle/N5xyiXZFykSV3NMB9" target="_blank">Day 3 Feedback</a></li>
+      <li><a href="https://forms.gle/Vz7xaZ8WZdNaf4zRA" target="_blank">Day 4 Feedback</a></li>
+      <li><a href="https://urldefense.com/v3/__https://carpentries.typeform.com/to/UgVdRQ?slug=2026-02-24-genomicsworkshop-online__" target="_blank">Post-Workshop Survey</a></li>
+    </ul>
+  </div>
+
+</main>
+
+<footer>
+  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

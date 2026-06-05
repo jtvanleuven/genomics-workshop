@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 3 – Genomics Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
+  <p>Day 3 &nbsp;·&nbsp; Tuesday, March 3, 2026</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="day1.html">Day 1</a>
+  <a href="day2.html">Day 2</a>
+  <a href="day3.html" class="active">Day 3</a>
+  <a href="day4.html">Day 4</a>
+  <a href="day5.html">Day 5</a>
+  <a href="day6.html">Day 6</a>
+</nav>
+
+<main>
+
+  <div class="day-nav">
+    <a href="day2.html">← Day 2</a>
+    <a href="day4.html">Day 4 →</a>
+  </div>
+
+  <div class="section">
+    <h2>📌 Today's Topics</h2>
+    <ul>
+      <li>Post-trim quality control with FastQC &amp; MultiQC (before vs. after comparison)</li>
+      <li>Downloading and indexing the reference genome</li>
+      <li>Aligning reads with BWA</li>
+      <li>Converting, sorting, and indexing alignments with SAMtools</li>
+      <li>Calling variants with BCFtools</li>
+    </ul>
+    <div class="banner info">
+      <span class="icon">💡</span>
+      <span>Today we go through the pipeline one sample at a time (SRR2584863). Tomorrow we'll automate it for all six samples with a bash script.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Post-Trim QC</h2>
+    <p>Run FastQC and MultiQC on the trimmed reads so we can compare reports:</p>
+<pre><code>cd ~/dc_workshop/01_qc/
+mkdir fastqc_trimmed
+
+module load fastqc
+fastqc ~/dc_workshop/02_trimmed_reads/*.fastq.gz -o ./fastqc_trimmed/
+
+module load python
+cd fastqc_trimmed
+multiqc ./</code></pre>
+
+    <p>Download both MultiQC reports and compare them side by side:</p>
+    <ul>
+      <li><code>~/dc_workshop/01_qc/multiqc_report_untrimmed.html</code></li>
+      <li><code>~/dc_workshop/01_qc/fastqc_trimmed/multiqc_report.html</code></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🧬 The Variant Calling Pipeline</h2>
+    <div class="pipeline">
+      <span class="pipe-step">trimmed reads</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">bwa mem (SAM)</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">samtools view (BAM)</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">samtools sort</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">bcftools mpileup (BCF)</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">bcftools call (VCF)</span>
+      <span class="pipe-arrow">→</span>
+      <span class="pipe-step">vcfutils filter</span>
+    </div>
+
+    <h3>Step 1 — Download &amp; index the reference genome</h3>
+<pre><code>cd ~/dc_workshop/03_ref_genome/
+
+wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/017/985/GCA_000017985.1_ASM1798v1/GCA_000017985.1_ASM1798v1_genomic.fna.gz
+
+mv GCA_000017985.1_ASM1798v1_genomic.fna.gz rel606.fasta.gz
+gunzip rel606.fasta.gz
+
+module load bwa
+bwa index rel606.fasta     # creates index files needed for alignment</code></pre>
+
+    <h3>Step 2 — Align reads to the reference (BWA)</h3>
+<pre><code>bwa mem ~/dc_workshop/03_ref_genome/rel606.fasta \
+  ~/dc_workshop/02_trimmed_reads/SRR2584863.trim.fastq.gz \
+  > SRR2584863.aligned.sam
+
+# Move the SAM file to the alignments folder
+cd ~/dc_workshop/04_alignments
+mkdir sam
+mv ~/dc_workshop/03_ref_genome/SRR2584863.aligned.sam ./sam/</code></pre>
+
+    <h3>Step 3 — Convert SAM → BAM, sort, index</h3>
+<pre><code>module load samtools
+cd ~/dc_workshop/04_alignments/sam
+
+samtools view -S -b SRR2584863.aligned.sam > ../bam/SRR2584863.aligned.bam
+samtools sort -o ../bam/SRR2584863.aligned.sorted.bam ../bam/SRR2584863.aligned.bam
+samtools index ../bam/SRR2584863.aligned.sorted.bam ../bam/SRR2584863.aligned.sorted.bam.bai</code></pre>
+
+    <h3>Step 4 — Call variants (BCFtools)</h3>
+<pre><code>cd ~/dc_workshop/05_genomic_variants
+mkdir vcf
+
+module load bcftools
+
+# Calculate read coverage at each position
+bcftools mpileup -O b \
+  -o SRR2584863_raw.bcf \
+  -f ~/dc_workshop/03_ref_genome/rel606.fasta \
+  ~/dc_workshop/04_alignments/bam/SRR2584863.aligned.sorted.bam
+
+# Call SNPs
+bcftools call --ploidy 1 -m -v \
+  -o ./vcf/SRR2584863.vcf \
+  SRR2584863_raw.bcf
+
+# Filter by quality
+cd vcf
+vcfutils.pl varFilter SRR2584863.vcf > SRR2584863_final_variants.vcf
+
+# Inspect the VCF
+less -S SRR2584863_final_variants.vcf</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>📄 File Format Summary</h2>
+    <table>
+      <thead><tr><th>Format</th><th>Full Name</th><th>Contents</th><th>Tool</th></tr></thead>
+      <tbody>
+        <tr><td><code>.sam</code></td><td>Sequence Alignment Map</td><td>Human-readable alignment of reads to genome</td><td>BWA</td></tr>
+        <tr><td><code>.bam</code></td><td>Binary Alignment Map</td><td>Compressed binary version of SAM</td><td>SAMtools</td></tr>
+        <tr><td><code>.bcf</code></td><td>Binary Call Format</td><td>Read coverage info at each position</td><td>BCFtools mpileup</td></tr>
+        <tr><td><code>.vcf</code></td><td>Variant Call Format</td><td>List of called SNPs/indels with quality scores</td><td>BCFtools call</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🤖 AI Integration — Day 3</h2>
+
+    <h3>Explain the alignment step</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I'm running BWA MEM to align E. coli sequencing reads to a reference genome. Explain in plain English: (1) what "alignment" means biologically — why do we need to do this? (2) what does bwa index do and why is it needed before alignment? (3) what does the output SAM file contain?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Understand SAM/BAM conversion</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>In a variant-calling bioinformatics pipeline, I run these three samtools commands after BWA alignment. Explain what each one does and why each step is necessary before calling variants:
+1. samtools view -S -b input.sam > output.bam
+2. samtools sort -o sorted.bam unsorted.bam
+3. samtools index sorted.bam sorted.bam.bai</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Interpret a VCF file</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I just generated a VCF (Variant Call Format) file from my E. coli sequencing data using bcftools. Explain the key fields in a VCF file: CHROM, POS, REF, ALT, QUAL, FILTER, and INFO. What does the QUAL score represent, and how does vcfutils.pl varFilter decide which variants to keep or remove?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Write the single-sample pipeline</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Write a bash script that runs the full variant-calling pipeline for a single E. coli sample (SRR2584863) on a Linux HPC. The pipeline should:
+1. Align trimmed reads (~/dc_workshop/02_trimmed_reads/SRR2584863.trim.fastq.gz) to the reference genome (~/dc_workshop/03_ref_genome/rel606.fasta) using bwa mem
+2. Convert SAM to BAM with samtools view
+3. Sort the BAM file with samtools sort
+4. Index the sorted BAM with samtools index
+5. Calculate coverage with bcftools mpileup
+6. Call variants with bcftools call --ploidy 1
+7. Filter variants with vcfutils.pl varFilter
+Place intermediate files in the appropriate subdirectories under ~/dc_workshop/04_alignments/ and ~/dc_workshop/05_genomic_variants/. Add comments explaining each step and use module load commands for bwa, samtools, and bcftools.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Troubleshoot an error</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I'm running a bioinformatics variant-calling pipeline on a Linux HPC and I got this error: [paste your error message here]. I was running this command: [paste command]. What does this error mean and how do I fix it?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📝 End of Day 3 Wrap-Up</h2>
+    <ul>
+      <li>You've run the full variant-calling pipeline for one sample (SRR2584863)</li>
+      <li>Your <code>05_genomic_variants/vcf/</code> directory now has a filtered VCF file</li>
+      <li>Tomorrow: automate this pipeline for all 6 samples using a bash script</li>
+    </ul>
+    <p><strong>Feedback:</strong> <a href="https://forms.gle/N5xyiXZFykSV3NMB9" target="_blank">Day 3 Feedback Form</a></p>
+  </div>
+
+</main>
+
+<footer>
+  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

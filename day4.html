@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 4 – Genomics Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
+  <p>Day 4 &nbsp;·&nbsp; Tuesday, March 5, 2026</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="day1.html">Day 1</a>
+  <a href="day2.html">Day 2</a>
+  <a href="day3.html">Day 3</a>
+  <a href="day4.html" class="active">Day 4</a>
+  <a href="day5.html">Day 5</a>
+  <a href="day6.html">Day 6</a>
+</nav>
+
+<main>
+
+  <div class="day-nav">
+    <a href="day3.html">← Day 3</a>
+    <a href="day5.html">Day 5 →</a>
+  </div>
+
+  <div class="section">
+    <h2>📌 Today's Topics</h2>
+    <ul>
+      <li>Writing a bash script to automate the variant-calling pipeline for all 6 samples</li>
+      <li>Running the script in a <code>screen</code> session</li>
+      <li>Visualizing alignment results in IGV</li>
+    </ul>
+    <div class="banner info">
+      <span class="icon">💡</span>
+      <span>This is the key AI day for the bash portion of the workshop. Instead of writing the script from scratch, you'll prompt AI to build it — then read, understand, and run it.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🤖 AI Integration — Write the Automation Script</h2>
+    <p>On Day 3 you ran the variant-calling pipeline manually for one sample. Today, instead of adapting that code yourself, you'll <strong>ask AI to write the full automation script</strong> for all 6 samples.</p>
+
+    <div class="banner warn">
+      <span class="icon">⚠️</span>
+      <span><strong>Before running:</strong> Read through every line of the AI-generated script. Ask the AI to explain any part you don't understand. Only run a script you understand.</span>
+    </div>
+
+    <h3>Prompt AI to write the full script</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Write a bash script called run_variant_calling.sh that automates the full variant-calling pipeline for multiple E. coli samples on a Linux HPC (University of Idaho Marvin/Zaphod cluster). The script should:
+
+1. Use "module load" to load: bwa, samtools, bcftools
+2. Set "set -e" to stop if any command fails
+3. Define a variable for the reference genome: ~/dc_workshop/03_ref_genome/rel606.fasta
+4. Run bwa index on the reference genome
+5. Create these output directories if they don't exist: 04_alignments/sam, 04_alignments/bam, 04_alignments/bcf, 05_genomic_variants/vcf, 05_genomic_variants/filtered
+6. Loop over all *.trim.fastq.gz files in ~/dc_workshop/02_trimmed_reads/ and for each sample:
+   - Print a message showing which sample is being processed
+   - Extract the sample base name (strip .trim.fastq.gz)
+   - Assign output file paths using descriptive variable names (sam, bam, sorted_bam, raw_bcf, variants, final_variants)
+   - Run: bwa mem → samtools view → samtools sort → samtools index → samtools flagstat (save to a stats file) → bcftools mpileup → bcftools call --ploidy 1 -m -v → vcfutils.pl varFilter
+7. Add a comment above every major command explaining what it does
+
+Format the script so it's easy to read, with blank lines between major steps.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Ask AI to explain a part you don't understand</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>In my bash automation script, I have this line: base=$(basename ${file} .trim.fastq.gz). Explain what basename does here and why I'm stripping ".trim.fastq.gz" from the filename. Also explain the ${base} syntax — why the curly braces?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Explain set -e</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>My bash script starts with "set -e". What does this do, and why is it important in a bioinformatics pipeline? What happens if I leave it out?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📋 The Full Automation Script</h2>
+    <p>After prompting AI, your script should look something like this. Create it with <code>nano run_variant_calling.sh</code>, paste the AI output, and save with <kbd>Ctrl+O</kbd> → Enter → <kbd>Ctrl+X</kbd>.</p>
+
+<pre><code>#!/bin/bash
+# run_variant_calling.sh
+# Automates the variant-calling pipeline for all trimmed E. coli samples
+
+## Load required modules
+module load bwa
+module load samtools
+module load bcftools
+
+## Stop script immediately if any command fails
+set -e
+
+## Change to project directory
+cd ~/dc_workshop
+
+## Assign reference genome path and index it
+genome=~/dc_workshop/03_ref_genome/rel606.fasta
+bwa index $genome
+
+## Create output directories (won't overwrite if they already exist)
+mkdir -p 04_alignments/sam 04_alignments/bam 04_alignments/bcf \
+         05_genomic_variants/vcf 05_genomic_variants/filtered
+
+## Loop over all trimmed read files
+for file in ~/dc_workshop/02_trimmed_reads/*.trim.fastq.gz; do
+
+    echo "====================================="
+    echo "Working with file: $file"
+
+    ## Extract sample name from filename
+    base=$(basename ${file} .trim.fastq.gz)
+    echo "Sample name: $base"
+
+    ## Assign output file paths
+    sam=~/dc_workshop/04_alignments/sam/${base}.aligned.sam
+    bam=~/dc_workshop/04_alignments/bam/${base}.aligned.bam
+    sorted_bam=~/dc_workshop/04_alignments/bam/${base}.aligned.sorted.bam
+    stats=~/dc_workshop/04_alignments/bam/${base}_flagstat.txt
+    raw_bcf=~/dc_workshop/04_alignments/bcf/${base}_raw.bcf
+    variants=~/dc_workshop/05_genomic_variants/vcf/${base}_variants.vcf
+    final_variants=~/dc_workshop/05_genomic_variants/filtered/${base}_final_variants.vcf
+
+    ## Align reads to reference genome
+    bwa mem $genome $file > $sam
+
+    ## Convert SAM to BAM (binary format — smaller and faster)
+    samtools view -S -b $sam > $bam
+
+    ## Sort BAM by genomic position
+    samtools sort -o $sorted_bam $bam
+
+    ## Create BAM index (needed for IGV and variant calling)
+    samtools index $sorted_bam
+
+    ## Save alignment statistics
+    samtools flagstat $sorted_bam > $stats
+
+    ## Calculate per-position read coverage
+    bcftools mpileup -O b -o $raw_bcf -f $genome $sorted_bam
+
+    ## Call SNP variants
+    bcftools call --ploidy 1 -m -v -o $variants $raw_bcf
+
+    ## Filter low-quality variants
+    vcfutils.pl varFilter $variants > $final_variants
+
+done
+
+echo "====================================="
+echo "Pipeline complete!"</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>▶️ Running the Script</h2>
+<pre><code>cd ~/dc_workshop
+
+# Make the script executable
+chmod u+x run_variant_calling.sh
+
+# Create a screen session so the script keeps running if you disconnect
+screen -S script
+screen -ls          # confirm you're attached
+
+# Run the script (~10 minutes for all 6 samples)
+./run_variant_calling.sh
+
+# Detach from screen while it runs
+# Press: Ctrl+A then D
+
+# Re-attach when it's done
+screen -r script</code></pre>
+
+    <h3>Final directory structure</h3>
+<pre><code>~/dc_workshop/
+├── 00_data/                          (raw reads)
+├── 01_qc/
+│   ├── fastqc_untrimmed/
+│   └── fastqc_trimmed/
+├── 02_trimmed_reads/                 (fastp output)
+├── 03_ref_genome/                    (rel606.fasta + bwa index files)
+├── 04_alignments/
+│   ├── sam/   (bwa mem)
+│   ├── bam/   (samtools view/sort/index/flagstat)
+│   └── bcf/   (bcftools mpileup)
+└── 05_genomic_variants/
+    ├── vcf/       (bcftools call)
+    └── filtered/  (vcfutils.pl varFilter)</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🖥️ Visualizing Alignments in IGV</h2>
+    <p>Use the <a href="https://igv.org/app/" target="_blank">IGV Web App</a> to visualize your alignments:</p>
+    <ol>
+      <li>Open <a href="https://igv.org/app/" target="_blank">igv.org/app</a></li>
+      <li>Load genome: <strong>Genome → Load from file</strong> → select <code>rel606.fasta</code> and <code>rel606.fasta.fai</code></li>
+      <li>Load alignment: <strong>Tracks → Load from file</strong> → select <code>SRR2584866.aligned.sorted.bam</code> and <code>.bam.bai</code></li>
+      <li>Load variants: add the <code>SRR2584866_final_variants.vcf</code> track</li>
+      <li>Navigate to a variant position from your VCF file and inspect the read pileup</li>
+    </ol>
+
+    <h3>Ask AI about IGV</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I'm viewing an alignment in IGV (Integrative Genomics Viewer). I've loaded an E. coli BAM file and a VCF file showing SNP variants. Explain what I'm looking at: what do the colored bars represent, what does the coverage histogram show, and how can I tell whether a called variant looks like a real mutation versus a sequencing error?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🤖 More AI Prompts — Day 4</h2>
+
+    <h3>Modify the script to add features</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Here is my bash variant-calling script: [paste your script]. Modify it to: (1) skip the alignment step if the sorted BAM file already exists for a sample, (2) print the total number of variants found for each sample after filtering, and (3) write a summary log file at the end listing each sample and its variant count.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Debug a script error</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>My bash script stopped with this error: [paste error]. The script uses "set -e" so it stopped automatically. The last command that ran was: [paste command]. What went wrong and how do I fix it? Here is the relevant part of my script: [paste relevant section].</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📝 End of Day 4 Wrap-Up</h2>
+    <ul>
+      <li>Your bash script has processed all 6 samples through the variant-calling pipeline</li>
+      <li>You have filtered VCF files in <code>05_genomic_variants/filtered/</code></li>
+      <li>You've visualized alignments and variants in IGV</li>
+      <li>Next: move to R to analyze and visualize the variant data</li>
+    </ul>
+    <p><strong>Feedback:</strong> <a href="https://forms.gle/Vz7xaZ8WZdNaf4zRA" target="_blank">Day 4 Feedback Form</a></p>
+  </div>
+
+</main>
+
+<footer>
+  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

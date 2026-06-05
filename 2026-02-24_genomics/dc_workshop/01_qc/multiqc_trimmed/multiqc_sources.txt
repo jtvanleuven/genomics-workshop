@@ -1,0 +1,7 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	SRR2584853.trim	/home/jvanleuven/dc_workshop/01_qc/fastqc_trimmed/SRR2584853.trim_fastqc.zip
+FastQC	all_sections	SRR2584863.trim	/home/jvanleuven/dc_workshop/01_qc/fastqc_trimmed/SRR2584863.trim_fastqc.zip
+FastQC	all_sections	SRR2584866.trim	/home/jvanleuven/dc_workshop/01_qc/fastqc_trimmed/SRR2584866.trim_fastqc.zip
+FastQC	all_sections	SRR2589044.trim	/home/jvanleuven/dc_workshop/01_qc/fastqc_trimmed/SRR2589044.trim_fastqc.zip
+FastQC	all_sections	SRR6178292.trim	/home/jvanleuven/dc_workshop/01_qc/fastqc_trimmed/SRR6178292.trim_fastqc.zip
+FastQC	all_sections	SRR6178302.trim	/home/jvanleuven/dc_workshop/01_qc/fastqc_trimmed/SRR6178302.trim_fastqc.zip

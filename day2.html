@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 2 – Genomics Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
+  <p>Day 2 &nbsp;·&nbsp; Thursday, February 26, 2026</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="day1.html">Day 1</a>
+  <a href="day2.html" class="active">Day 2</a>
+  <a href="day3.html">Day 3</a>
+  <a href="day4.html">Day 4</a>
+  <a href="day5.html">Day 5</a>
+  <a href="day6.html">Day 6</a>
+</nav>
+
+<main>
+
+  <div class="day-nav">
+    <a href="day1.html">← Day 1</a>
+    <a href="day3.html">Day 3 →</a>
+  </div>
+
+  <div class="section">
+    <h2>📌 Today's Topics</h2>
+    <ul>
+      <li>Inspecting FASTQ files with <code>cat</code>, <code>less</code>, <code>head</code>, <code>grep</code></li>
+      <li>Understanding the FASTQ format and Phred quality scores</li>
+      <li>Running FastQC and MultiQC to assess read quality</li>
+      <li>Trimming reads with <code>fastp</code></li>
+      <li>Introduction to bash <code>for</code> loops</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🔍 Inspecting Your FASTQ Files</h2>
+    <p>Navigate to your data directory and look at what you downloaded:</p>
+<pre><code>cd ~/dc_workshop/00_data
+ls -lh</code></pre>
+
+    <p>A FASTQ file has 4 lines per read. Let's look at one:</p>
+<pre><code># Decompress a copy to inspect
+mkdir unzipped
+cp SRR2589044_1.fastq.gz unzipped/
+cd unzipped
+gunzip SRR2589044_1.fastq.gz
+
+head SRR2589044_1.fastq       # first few lines
+tail SRR2589044_1.fastq       # last few lines
+less SRR2589044_1.fastq       # scroll through (q to quit, / to search)</code></pre>
+
+    <p>Search for low-quality reads (sequences with 10 or more unknown bases):</p>
+<pre><code>grep NNNNNNNNNN SRR2589044_1.fastq | wc -l   # count bad reads
+grep NNNNNNNNNN SRR2589044_1.fastq > bad_reads.txt</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>📊 The FASTQ Format</h2>
+    <table>
+      <thead><tr><th>Line</th><th>Content</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Read name (starts with @)</td><td><code>@SRR2584853.1</code></td></tr>
+        <tr><td>2</td><td>DNA sequence</td><td><code>ACGTACGT...</code></td></tr>
+        <tr><td>3</td><td>Separator (just a +)</td><td><code>+</code></td></tr>
+        <tr><td>4</td><td>Quality scores (ASCII encoded)</td><td><code>IIIIIHFEE...</code></td></tr>
+      </tbody>
+    </table>
+    <p>Quality scores are <strong>Phred scores</strong> encoded as ASCII characters. Higher score = higher confidence the base call is correct. A score of 30 means a 1-in-1000 chance of error (99.9% accurate).</p>
+  </div>
+
+  <div class="section">
+    <h2>🔬 Quality Control with FastQC &amp; MultiQC</h2>
+    <p>FastQC generates a per-sample QC report. MultiQC combines all reports into one HTML file.</p>
+<pre><code>cd ~/dc_workshop
+
+# Load and run FastQC on all raw reads
+module load fastqc
+fastqc -t 4 00_data/*.fastq.gz
+
+# Organize the output
+mv 00_data/*fastqc* 01_qc/
+cd 01_qc
+mkdir fastqc_untrimmed
+mv *_fastqc* fastqc_untrimmed/
+
+# Run MultiQC to combine all FastQC reports
+module load python
+multiqc fastqc_untrimmed/*
+
+# Rename so we can compare with post-trim report later
+mv multiqc_data fastqc_untrimmed/
+mv multiqc_report.html multiqc_report_untrimmed.html</code></pre>
+
+    <p>Download the <code>.html</code> files via OnDemand and open them in your browser. Which sample has the best per-base sequence quality? Which looks the worst?</p>
+  </div>
+
+  <div class="section">
+    <h2>✂️ Trimming Reads with fastp</h2>
+    <p>fastp removes low-quality bases from the ends of reads and filters out poor-quality reads entirely. We'll download the program directly and change its permissions:</p>
+<pre><code>cd ~/dc_workshop/02_trimmed_reads
+wget http://opengene.org/fastp/fastp
+chmod u+x fastp        # make it executable
+./fastp                # test that it runs</code></pre>
+
+    <h3>Run fastp on a single file first</h3>
+<pre><code>./fastp \
+  -i ~/dc_workshop/00_data/SRR2584853_1.fastq.gz \
+  -o SRR2584853.trim.fastq.gz \
+  -h SRR2584853.html \
+  -q 30 \
+  --unqualified_percent_limit 10 \
+  --reads_to_process 500000</code></pre>
+
+    <h3>Use a loop to run fastp on all samples</h3>
+    <p>A <code>for</code> loop lets us repeat a command for every file matching a pattern:</p>
+<pre><code># Simple loop — prints each sample name
+for file in ~/dc_workshop/00_data/*_1.fastq.gz; do
+  base=$(basename $file _1.fastq.gz)
+  echo $base
+done
+
+# Full loop — runs fastp on each sample
+for file in ~/dc_workshop/00_data/*_1.fastq.gz; do
+  base=$(basename $file _1.fastq.gz)
+  echo "Processing $base..."
+  ./fastp \
+    -i $file \
+    -o ${base}.trim.fastq.gz \
+    -h ${base}.html \
+    -q 30 -u 10 \
+    --reads_to_process 500000
+done</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>🤖 AI Integration — Day 2</h2>
+
+    <h3>Understand the FASTQ format</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Explain the FASTQ file format to me as if I'm a biologist who is new to bioinformatics. What are the 4 lines in each read? What is a Phred quality score, and what does a score of 20, 30, or 40 actually mean in terms of sequencing accuracy?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Interpret a FastQC report</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I ran FastQC on an Illumina sequencing file and I'm looking at the report. The "Per Base Sequence Quality" plot shows quality scores drop below 28 toward the 3' end of reads, and the "Per Sequence GC Content" shows an unusual second peak. What do these results tell me about the quality of my data, and should I be concerned? What trimming parameters would you recommend for fastp?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Understand fastp parameters</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>I'm running fastp to trim Illumina sequencing reads. Explain what each of these parameters does: -q 30, --unqualified_percent_limit 10, --reads_to_process 500000. Why would I choose a quality threshold of 30, and what are the tradeoffs of being more or less strict?</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Write a fastp loop</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Write a bash for loop that runs fastp on all files ending in _1.fastq.gz in the directory ~/dc_workshop/00_data. For each file, the output trimmed file should go into ~/dc_workshop/02_trimmed_reads/ and be named using the sample ID (e.g., SRR2584853.trim.fastq.gz). Use quality threshold -q 30 and --unqualified_percent_limit 10. Add echo statements so I can see which sample is currently being processed. Include a comment explaining each step.</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+
+    <h3>Explain what a loop does</h3>
+    <div class="ai-prompt">
+      <div class="prompt-label">🤖 AI Prompt</div>
+      <p>Explain this bash for loop to me line by line. What does $(basename $file _1.fastq.gz) do, and why is it useful? What is the ${base} syntax?
+
+for file in ~/dc_workshop/00_data/*_1.fastq.gz; do
+  base=$(basename $file _1.fastq.gz)
+  echo $base
+done</p>
+      <button class="copy-prompt-btn">Copy prompt</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📝 End of Day 2 Wrap-Up</h2>
+    <ul>
+      <li>You've inspected raw FASTQ files and understand the format</li>
+      <li>FastQC and MultiQC reports show you overall read quality before trimming</li>
+      <li>fastp has trimmed your reads — tomorrow we'll check quality again and start aligning</li>
+    </ul>
+    <p><strong>Feedback:</strong> <a href="https://forms.gle/Q3DUrBBBNbzfASfB7" target="_blank">Day 2 Feedback Form</a></p>
+  </div>
+
+</main>
+
+<footer>
+  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>
