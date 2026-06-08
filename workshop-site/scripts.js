@@ -1,42 +1,39 @@
-/* Genomics Workshop – shared JS */
+// ── Copy to clipboard ─────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre code');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
 
-// ── Add copy buttons to all <pre> blocks ──────────────────────────────────
+function copyPrompt(btn) {
+  const text = btn.closest('.prompt-box').querySelector('.prompt-text').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── Mobile sidebar toggle ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Code block copy buttons
-  document.querySelectorAll('pre').forEach(pre => {
-    const btn = document.createElement('button');
-    btn.className = 'copy-btn';
-    btn.textContent = 'Copy';
-    btn.addEventListener('click', () => {
-      const text = pre.querySelector('code')
-        ? pre.querySelector('code').innerText
-        : pre.innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        btn.textContent = '✓ Copied';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
-      });
+  const toggle = document.querySelector('.menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
+  if (toggle && sidebar) {
+    toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
     });
-    pre.style.position = 'relative';
-    pre.appendChild(btn);
-  });
+  }
 
-  // AI prompt copy buttons
-  document.querySelectorAll('.copy-prompt-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const promptEl = btn.closest('.ai-prompt').querySelector('p');
-      if (!promptEl) return;
-      navigator.clipboard.writeText(promptEl.innerText).then(() => {
-        btn.textContent = '✓ Copied!';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); }, 1800);
-      });
-    });
-  });
-
-  // Highlight active nav link
-  const current = location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('nav a').forEach(a => {
+  // Mark active nav link
+  const current = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('.sidebar nav a').forEach(a => {
     if (a.getAttribute('href') === current) a.classList.add('active');
   });
 });

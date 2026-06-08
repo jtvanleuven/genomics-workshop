@@ -1,99 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Day 1 – Genomics Workshop</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 1 — Command Line &amp; Data Download</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>🧬 Data Carpentries: Genomics Workshop</h1>
-  <p>Day 1 &nbsp;·&nbsp; Tuesday, February 24, 2026</p>
-</header>
+<button class="menu-toggle" aria-label="Toggle menu">☰</button>
 
-<nav>
-  <a href="index.html">Home</a>
-  <a href="day1.html" class="active">Day 1</a>
-  <a href="day2.html">Day 2</a>
-  <a href="day3.html">Day 3</a>
-  <a href="day4.html">Day 4</a>
-  <a href="day5.html">Day 5</a>
-  <a href="day6.html">Day 6</a>
-</nav>
-
-<main>
-
-  <div class="day-nav">
-    <a href="index.html">← Home</a>
-    <a href="day2.html">Day 2 →</a>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">Data Carpentries: Genomics<span>IMCI · University of Idaho</span></a>
   </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <a href="index.html">Home</a>
+    <div class="nav-section">Workshop Days</div>
+    <a href="day1.html">Day 1 — Command Line<span class="day-label">Tue Feb 24</span></a>
+    <a href="day2.html">Day 2 — QC &amp; Trimming<span class="day-label">Thu Feb 26</span></a>
+    <a href="day3.html">Day 3 — Variant Calling<span class="day-label">Tue Mar 3</span></a>
+    <a href="day4.html">Day 4 — Automation &amp; IGV<span class="day-label">Tue Mar 5</span></a>
+    <a href="day5.html">Day 5 — Intro to R<span class="day-label">Tue Mar 10</span></a>
+    <a href="day6.html">Day 6 — R Visualization<span class="day-label">Thu Mar 12</span></a>
+  </nav>
+  <div class="sidebar-footer">Tues &amp; Thurs · 3:00–5:30 PST<br>IRIC 352 / Zoom</div>
+</aside>
 
-  <div class="section">
-    <h2>📌 Today's Topics</h2>
-    <ul>
-      <li>Introduction to the workshop and the LTEE dataset</li>
-      <li>Connecting to the HPC and navigating the command line</li>
-      <li>Setting up your directory structure</li>
-      <li>Downloading sequencing reads with <code>curl</code> / <code>wget</code></li>
-    </ul>
-    <div class="banner info">
-      <span class="icon">🖥️</span>
-      <span>Server: <strong>marvin.hpc.uidaho.edu:8000</strong> or <strong>zaphod.hpc.uidaho.edu:8000</strong></span>
+<div class="main">
+  <header class="page-header">
+    <div class="day-tag">Day 1 · Tuesday, February 24</div>
+    <h1>Command Line &amp; Data Download</h1>
+    <div class="meta"><span>Intro, data organization, command line basics</span><span>Server: marvin / zaphod.hpc.uidaho.edu:8000</span></div>
+  </header>
+
+  <div class="content">
+
+    <div class="section">
+      <div class="section-title">Background: The LTEE Dataset</div>
+      <p>We're working with <em>E. coli</em> genome data from the <strong>Long-Term Evolution Experiment (LTEE)</strong>. Richard Lenski has been growing <em>E. coli</em> populations since 1988, and genomes have accumulated mutations over tens of thousands of generations. Our six samples come from different LTEE lineages at different time points — by calling variants, we can see exactly which mutations arose and in which genes.</p>
     </div>
-  </div>
 
-  <div class="section">
-    <h2>🦠 Background: The LTEE Dataset</h2>
-    <p>We're working with <em>E. coli</em> genome data from the <strong>Long-Term Evolution Experiment (LTEE)</strong> — one of the longest-running evolution experiments ever conducted. Richard Lenski has been growing <em>E. coli</em> populations since 1988, and the genomes have accumulated mutations over tens of thousands of generations.</p>
-    <p>Our six samples come from different LTEE lineages at different time points. By calling variants, we can see exactly which mutations arose and in which genes.</p>
-  </div>
-
-  <div class="section">
-    <h2>🗂️ Setting Up Your Directory Structure</h2>
-    <p>Everything we do lives inside a single project folder called <code>dc_workshop</code>. Create it and navigate into it:</p>
-<pre><code>mkdir dc_workshop
+    <div class="section">
+      <div class="section-title">Setting Up Your Directory Structure</div>
+      <p>Everything lives inside a single project folder called <code>dc_workshop</code>. Create it and navigate in:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>mkdir dc_workshop
 cd dc_workshop
 mkdir 00_data</code></pre>
+      </div>
 
-    <p>The full directory structure we'll build over the workshop:</p>
-<pre><code>~/dc_workshop/
-├── 00_data/          # raw .fastq.gz files
-├── 01_qc/            # FastQC and MultiQC reports
-├── 02_trimmed_reads/ # fastp output
-├── 03_ref_genome/    # E. coli reference genome
-├── 04_alignments/    # SAM, BAM files
+      <p>The full structure we'll build over the workshop:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>~/dc_workshop/
+├── 00_data/             # raw .fastq.gz files
+├── 01_qc/               # FastQC and MultiQC reports
+├── 02_trimmed_reads/    # fastp output
+├── 03_ref_genome/       # E. coli reference genome
+├── 04_alignments/       # SAM, BAM files
 └── 05_genomic_variants/ # VCF files</code></pre>
-  </div>
+      </div>
+    </div>
 
-  <div class="section">
-    <h2>⌨️ Essential Shell Commands</h2>
-    <table>
-      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
-      <tbody>
-        <tr><td><code>pwd</code></td><td>Print working directory (where am I?)</td></tr>
+    <div class="section">
+      <div class="section-title">Essential Shell Commands</div>
+      <table class="schedule-table">
+        <tr><th>Command</th><th>What it does</th></tr>
+        <tr><td><code>pwd</code></td><td>Print working directory</td></tr>
         <tr><td><code>ls</code>, <code>ls -lh</code></td><td>List files; <code>-lh</code> adds size and permissions</td></tr>
         <tr><td><code>cd &lt;dir&gt;</code></td><td>Change into a directory</td></tr>
         <tr><td><code>cd ..</code></td><td>Go up one directory level</td></tr>
         <tr><td><code>mkdir &lt;name&gt;</code></td><td>Create a new directory</td></tr>
-        <tr><td><code>clear</code> / <kbd>Ctrl+L</kbd></td><td>Clear the terminal screen</td></tr>
-        <tr><td><kbd>Tab</kbd></td><td>Auto-complete a file or folder name</td></tr>
-        <tr><td><kbd>↑</kbd> arrow</td><td>Recall previous command</td></tr>
-        <tr><td><kbd>Ctrl+C</kbd></td><td>Cancel the running command</td></tr>
-        <tr><td><kbd>Ctrl+A</kbd> / <kbd>Ctrl+E</kbd></td><td>Jump to beginning / end of line</td></tr>
-      </tbody>
-    </table>
-    <div class="banner tip">
-      <span class="icon">💡</span>
-      <span>The HPC does not have <code>man</code> pages. Use <code>--help</code> instead: e.g. <code>ls --help</code></span>
+        <tr><td><code>clear</code> / Ctrl+L</td><td>Clear the terminal screen</td></tr>
+        <tr><td>Tab</td><td>Auto-complete a file or folder name</td></tr>
+        <tr><td>↑ arrow</td><td>Recall previous command</td></tr>
+        <tr><td>Ctrl+C</td><td>Cancel the running command</td></tr>
+        <tr><td>Ctrl+A / Ctrl+E</td><td>Jump to beginning / end of line</td></tr>
+      </table>
+      <div class="callout tip">
+        <div class="callout-title">HPC Note</div>
+        <p>The HPC does not have <code>man</code> pages. Use <code>--help</code> instead: e.g. <code>ls --help</code></p>
+      </div>
     </div>
-  </div>
 
-  <div class="section">
-    <h2>⬇️ Downloading the Sequencing Reads</h2>
-    <p>Navigate into your data directory and download all six <em>E. coli</em> FASTQ files. Each file may take ~15 minutes.</p>
-<pre><code>cd ~/dc_workshop/00_data
+    <div class="section">
+      <div class="section-title">Downloading the Sequencing Reads</div>
+      <p>Navigate into your data directory and download all six <em>E. coli</em> FASTQ files. Each file may take ~15 minutes.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>cd ~/dc_workshop/00_data
 
 curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR258/004/SRR2589044/SRR2589044_1.fastq.gz
 curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR258/003/SRR2584863/SRR2584863_1.fastq.gz
@@ -101,68 +99,67 @@ curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR258/006/SRR2584866/SRR2584866_1.fa
 curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR258/003/SRR2584853/SRR2584853_1.fastq.gz
 curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR617/002/SRR6178302/SRR6178302_1.fastq.gz
 curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR617/002/SRR6178292/SRR6178292_1.fastq.gz</code></pre>
+      </div>
+      <div class="callout warn">
+        <div class="callout-title">If curl fails</div>
+        <p>Substitute <code>wget</code> — replace <code>curl -O</code> with <code>wget</code> for each line.</p>
+      </div>
 
-    <div class="banner warn">
-      <span class="icon">⚠️</span>
-      <span>If <code>curl</code> fails, substitute <code>wget</code> — just replace <code>curl -O</code> with <code>wget</code>.</span>
-    </div>
-
-    <h3>Running downloads in a persistent screen session</h3>
-    <p>Downloads can take a while. Use <code>screen</code> so they keep running if you get disconnected:</p>
-<pre><code>screen -S downloads   # create a named session
+      <h2>Running Downloads in a screen Session</h2>
+      <p>Use <code>screen</code> so downloads keep running if you get disconnected:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>screen -S downloads    # create a named session
 # ... start your downloads ...
-# Ctrl+A then D         to detach (session keeps running)
-screen -r downloads   # re-attach later</code></pre>
+# Ctrl+A then D          to detach (session keeps running)
+screen -r downloads    # re-attach later</code></pre>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AI Activities <span class="badge ai">AI</span></div>
+
+      <h2>Understand a command</h2>
+      <div class="prompt-box">
+        <div class="prompt-label">🤖 AI Prompt — copy and paste into Claude.ai or ChatGPT</div>
+        <div class="prompt-text">I'm learning the Linux command line for bioinformatics on a university HPC. Explain what this command does, and what each flag means: ls -lh</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">Copy prompt</button>
+      </div>
+
+      <h2>Set up the directory structure</h2>
+      <div class="prompt-box">
+        <div class="prompt-label">🤖 AI Prompt — copy and paste into Claude.ai or ChatGPT</div>
+        <div class="prompt-text">I'm setting up a bioinformatics project directory for a genomics variant-calling workshop. Write a bash script that creates this full directory structure under ~/dc_workshop: 00_data, 01_qc, 02_trimmed_reads, 03_ref_genome, 04_alignments (with subdirectories sam, bam, bcf), and 05_genomic_variants (with subdirectories vcf and filtered). Add a comment above each mkdir command explaining what that folder will be used for.</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">Copy prompt</button>
+      </div>
+
+      <h2>Write a download script</h2>
+      <div class="prompt-box">
+        <div class="prompt-label">🤖 AI Prompt — copy and paste into Claude.ai or ChatGPT</div>
+        <div class="prompt-text">Write a bash script that downloads these 6 E. coli FASTQ files from EBI into ~/dc_workshop/00_data using curl. Add error handling so the script prints a message if a download fails. Files: SRR2589044_1.fastq.gz, SRR2584863_1.fastq.gz, SRR2584866_1.fastq.gz, SRR2584853_1.fastq.gz, SRR6178302_1.fastq.gz, SRR6178292_1.fastq.gz from ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ (paths: SRR258/004/SRR2589044/, SRR258/003/SRR2584863/, SRR258/006/SRR2584866/, SRR258/003/SRR2584853/, SRR617/002/SRR6178302/, SRR617/002/SRR6178292/).</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">Copy prompt</button>
+      </div>
+
+      <h2>Troubleshoot a download error</h2>
+      <div class="prompt-box">
+        <div class="prompt-label">🤖 AI Prompt — copy and paste into Claude.ai or ChatGPT</div>
+        <div class="prompt-text">I'm trying to download a file from an FTP server with curl on a Linux HPC and got this error: [paste your error here]. The command I ran was: [paste command]. What does this error mean and how do I fix it?</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">Copy prompt</button>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">End of Day 1</div>
+      <p>Your <code>dc_workshop/00_data</code> directory has (or is downloading) 6 <em>E. coli</em> FASTQ files. Tomorrow we'll inspect those files and run quality control. <a href="https://forms.gle/zcA97s5C1Vvpw74C9" target="_blank">Day 1 feedback form →</a></p>
+    </div>
+
+    <div class="page-nav">
+      <span></span>
+      <a class="next" href="day2.html">Day 2: QC &amp; Trimming →</a>
+    </div>
+
   </div>
-
-  <div class="section">
-    <h2>🤖 AI Integration — Day 1</h2>
-    <p>Today's AI exercises focus on <strong>understanding shell commands</strong> and <strong>troubleshooting</strong>. Use these prompts when you're stuck or curious about what a command actually does.</p>
-
-    <h3>Explain a command</h3>
-    <div class="ai-prompt">
-      <div class="prompt-label">🤖 AI Prompt</div>
-      <p>I'm learning the Linux command line for bioinformatics. Explain what this command does, line by line, in plain English: ls -lh</p>
-      <button class="copy-prompt-btn">Copy prompt</button>
-    </div>
-
-    <h3>Understand directory structures</h3>
-    <div class="ai-prompt">
-      <div class="prompt-label">🤖 AI Prompt</div>
-      <p>I'm setting up a bioinformatics project directory for a genomics variant-calling workshop. Create a bash script that makes this full directory structure under ~/dc_workshop: 00_data, 01_qc, 02_trimmed_reads, 03_ref_genome, 04_alignments (with subdirectories sam, bam, bcf), and 05_genomic_variants (with subdirectories vcf and filtered). Add a comment above each mkdir command explaining what that folder will be used for.</p>
-      <button class="copy-prompt-btn">Copy prompt</button>
-    </div>
-
-    <h3>Troubleshoot a download error</h3>
-    <div class="ai-prompt">
-      <div class="prompt-label">🤖 AI Prompt</div>
-      <p>I'm trying to download a file from an FTP server with curl on a Linux HPC. I ran: curl -O ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR258/004/SRR2589044/SRR2589044_1.fastq.gz and got this error: [paste your error here]. What does this error mean and how do I fix it?</p>
-      <button class="copy-prompt-btn">Copy prompt</button>
-    </div>
-
-    <h3>Write a download script</h3>
-    <div class="ai-prompt">
-      <div class="prompt-label">🤖 AI Prompt</div>
-      <p>Write a bash script that downloads these 6 E. coli FASTQ files from EBI into a directory called ~/dc_workshop/00_data. Use curl and add error handling so the script prints a message if a download fails. Files to download: SRR2589044_1.fastq.gz, SRR2584863_1.fastq.gz, SRR2584866_1.fastq.gz, SRR2584853_1.fastq.gz, SRR6178302_1.fastq.gz, SRR6178292_1.fastq.gz from ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR258/004/SRR2589044/, SRR258/003/SRR2584863/, SRR258/006/SRR2584866/, SRR258/003/SRR2584853/, SRR617/002/SRR6178302/, SRR617/002/SRR6178292/ respectively.</p>
-      <button class="copy-prompt-btn">Copy prompt</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>📝 End of Day 1 Wrap-Up</h2>
-    <ul>
-      <li>You've connected to the HPC and navigated the shell</li>
-      <li>Your <code>dc_workshop/00_data</code> directory has (or is downloading) 6 <em>E. coli</em> FASTQ files</li>
-      <li>Tomorrow we'll inspect those files and run quality control</li>
-    </ul>
-    <p><strong>Feedback:</strong> <a href="https://forms.gle/zcA97s5C1Vvpw74C9" target="_blank">Day 1 Feedback Form</a></p>
-  </div>
-
-</main>
-
-<footer>
-  University of Idaho IMCI &nbsp;·&nbsp; Data Carpentries Genomics Workshop &nbsp;·&nbsp; 2026
-</footer>
+</div>
 
 <script src="scripts.js"></script>
 </body>

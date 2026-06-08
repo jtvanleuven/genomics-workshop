@@ -1,0 +1,16 @@
+Pre-workshop survey and Post-workshop Survey links are dead. Just leave them there for now so that I can update them when we have the correct links.
+
+The formatting of the Datavis one is totally different than the genomics one. 
+
+"Course Website" should be "Carpentries Course Website"
+
+remove "IGV Web App"
+
+I don't like these parts because we will talk about this:
+   Explain the FASTQ file format to me as if I'm a biologist who is new to bioinformatics. What are the 4 lines in each read? What is a Phred quality score, and what does a score of 20, 30, or 40 actually 
+   I ran FastQC on an Illumina sequencing file and I'm looking at the report. The "Per Base Sequence Quality" plot shows quality scores drop below 28 toward the 3' end of reads, and the "Per Sequence GC Content" shows an unusual second peak. What do these results tell me about the quality of my data, and should I be concerned? What trimming parameters would you recommend for fastp?
+   I'm running fastp to trim Illumina sequencing reads. Explain what each of these parameters does: -q 30, --unqualified_percent_limit 10, --reads_to_process 500000. Why would I choose a quality threshold of 30, and what are the tradeoffs of being more or less strict?
+
+I would like to introduce a short section at the beginning to provide some prompt generation good practices. 
+
+
