@@ -18,12 +18,12 @@
     <div class="nav-section">Overview</div>
     <a href="index.html">Home</a>
     <div class="nav-section">Workshop Days</div>
-    <a href="day1.html">Day 1 — Command Line<span class="day-label">Tue Feb 24</span></a>
-    <a href="day2.html">Day 2 — QC &amp; Trimming<span class="day-label">Thu Feb 26</span></a>
-    <a href="day3.html">Day 3 — Variant Calling<span class="day-label">Tue Mar 3</span></a>
-    <a href="day4.html">Day 4 — Automation &amp; IGV<span class="day-label">Tue Mar 5</span></a>
-    <a href="day5.html">Day 5 — Intro to R<span class="day-label">Tue Mar 10</span></a>
-    <a href="day6.html">Day 6 — R Visualization<span class="day-label">Thu Mar 12</span></a>
+    <a href="day1.html">Day 1 — Command Line<span class="day-label">Tue Dec 1</span></a>
+    <a href="day2.html">Day 2 — QC &amp; Trimming<span class="day-label">Thu Dec 3</span></a>
+    <a href="day3.html">Day 3 — Variant Calling<span class="day-label">Tue Dec 8</span></a>
+    <a href="day4.html">Day 4 — Automation &amp; IGV<span class="day-label">Thu Dec 10</span></a>
+    <a href="day5.html">Day 5 — Intro to R<span class="day-label">Tue Dec 15</span></a>
+    <a href="day6.html">Day 6 — R Visualization<span class="day-label">Thu Dec 17</span></a>
   </nav>
   <div class="sidebar-footer">Tues &amp; Thurs · 3:00–5:30 PST<br>IRIC 352 / Zoom</div>
 </aside>
@@ -34,7 +34,7 @@
     <h1>Data Carpentries: Genomics Workshop</h1>
     <p style="color:#94A3B8;margin-top:10px;font-size:15px;">A six-session workshop on analyzing next-generation sequencing data — from the command line through to publication-quality figures in R, using AI as a coding collaborator.</p>
     <div class="meta">
-      <span>February 24 – March 12, 2026</span>
+      <span>December 1–17, 2026</span>
       <span>Tuesdays &amp; Thursdays 3:00–5:30 PST</span>
       <span>IRIC 352 / Zoom</span>
     </div>
@@ -43,40 +43,46 @@
   <div class="content">
 
     <div class="section">
+      <div class="section-title">Course Description</div>
+      <p><a href="https://datacarpentry.org/" target="_blank">Data Carpentries</a> aims to teach researchers basic concepts, skills, and tools for working with data to get more done in less time, and with less pain. This hands-on workshop covers bioinformatics data analysis from raw sequencing reads to publication-quality figures — using AI as a coding collaborator throughout. Topics include best practices for organizing bioinformatics projects, command-line navigation and file management on a high-performance computing cluster, quality control and adapter trimming with FastQC and fastp, read alignment and variant calling with BWA and SAMtools, bash scripting for pipeline automation, and data wrangling and visualization in R. A key feature of this workshop is integrating AI tools (Claude, ChatGPT) as coding partners: students learn to write effective prompts, critically evaluate AI-generated code, and iterate toward working solutions.</p>
+      <p>The course is aimed at graduate students and researchers but is open to all; some familiarity with biological concepts (DNA, mutation, sequencing) is helpful but no prior programming experience is required. Participants must bring a laptop with a Mac, Linux, or Windows operating system on which they have administrative privileges. For more information, visit <a href="https://imci.uidaho.edu/data-carpentries-training/" target="_blank">imci.uidaho.edu/data-carpentries-training</a>.</p>
+    </div>
+
+    <div class="section">
       <div class="section-title">Workshop Schedule</div>
       <div class="day-grid">
         <a class="day-card" href="day1.html">
-          <div class="card-day">Day 1 · Tue Feb 24</div>
+          <div class="card-day">Day 1 · Tue Dec 1</div>
           <h3>Command Line &amp; Data Download</h3>
           <p>Connecting to the HPC, navigating the shell, setting up your project directory, and downloading E. coli sequencing reads.</p>
           <div class="card-date">AI activity: write a download script</div>
         </a>
         <a class="day-card" href="day2.html">
-          <div class="card-day">Day 2 · Thu Feb 26</div>
+          <div class="card-day">Day 2 · Thu Dec 3</div>
           <h3>Quality Control &amp; Trimming</h3>
           <p>Inspecting FASTQ files, running FastQC and MultiQC, and trimming reads with fastp using a for loop.</p>
           <div class="card-date">AI activity: write a fastp loop</div>
         </a>
         <a class="day-card" href="day3.html">
-          <div class="card-day">Day 3 · Tue Mar 3</div>
+          <div class="card-day">Day 3 · Tue Dec 8</div>
           <h3>Variant Calling</h3>
           <p>Post-trim QC, aligning reads with BWA, converting files with SAMtools, and calling variants with BCFtools.</p>
           <div class="card-date">AI activity: write the single-sample pipeline</div>
         </a>
         <a class="day-card" href="day4.html">
-          <div class="card-day">Day 4 · Tue Mar 5</div>
+          <div class="card-day">Day 4 · Thu Dec 10</div>
           <h3>Automation &amp; IGV</h3>
           <p>Using AI to write the full bash automation script for all 6 samples, running it in a screen session, and visualizing alignments in IGV.</p>
           <div class="card-date">AI activity: write run_variant_calling.sh</div>
         </a>
         <a class="day-card" href="day5.html">
-          <div class="card-day">Day 5 · Tue Mar 10</div>
+          <div class="card-day">Day 5 · Tue Dec 15</div>
           <h3>Introduction to R</h3>
           <p>R and RStudio orientation, reading VCF files with vcfR, combining all samples into a data frame, and intro to dplyr.</p>
           <div class="card-date">AI activity: write the VCF import loop</div>
         </a>
         <a class="day-card" href="day6.html">
-          <div class="card-day">Day 6 · Thu Mar 12</div>
+          <div class="card-day">Day 6 · Thu Dec 17</div>
           <h3>R Visualization</h3>
           <p>Coverage plots, merging with metadata, gene annotation, tile plots, heatmaps, UpSet plots, and saving figures.</p>
           <div class="card-date">AI activity: build all visualizations</div>
